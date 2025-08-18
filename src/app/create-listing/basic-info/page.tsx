@@ -26,7 +26,8 @@ export default function CreateListingPage() {
 
   const handleContinue = () => {
     // For now: navigate to step 2 (placeholder)
-    router.push("/create/step-2");
+    router.push("/create-listing/additional-details");
+    // router.push("/create/step-2");
   };
 
   return (

@@ -31,7 +31,9 @@ export default function HomePage() {
 
         <div className="flex flex-col sm:flex-row gap-6">
           <ButtonLink href="/search">Search for a part</ButtonLink>
-          <ButtonLink href="/create">List a part for sale</ButtonLink>
+          <ButtonLink href="/create-listing/basic-info">
+            List a part for sale
+          </ButtonLink>
         </div>
       </section>
     </main>
