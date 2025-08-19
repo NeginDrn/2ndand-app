@@ -25,9 +25,8 @@ export default function CreateListingPage() {
   };
 
   const handleContinue = () => {
-    // For now: navigate to step 2 (placeholder)
+    localStorage.setItem("basicListingInfo", JSON.stringify(form));
     router.push("/create-listing/additional-details");
-    // router.push("/create/step-2");
   };
 
   return (
@@ -43,8 +42,13 @@ export default function CreateListingPage() {
 
         {/* Form Fields */}
         <form className="space-y-6">
-          {Object.entries(listingFieldLabels).map(([field, label]) => {
-            const isSelect = listingSelectOptions[field] !== undefined;
+          {(
+            Object.entries(listingFieldLabels) as [
+              keyof typeof listingSelectOptions,
+              string
+            ][]
+          ).map(([field, label]) => {
+            const isSelect = field in listingSelectOptions;
 
             return (
               <div key={field}>
