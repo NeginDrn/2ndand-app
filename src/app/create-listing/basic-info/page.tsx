@@ -6,6 +6,7 @@ import {
   listingFieldLabels,
   listingSelectOptions,
 } from "@/data/listingOptions";
+import FormButton from "@/components/FormButton";
 
 export default function CreateListingPage() {
   const [form, setForm] = useState({
@@ -85,13 +86,15 @@ export default function CreateListingPage() {
           })}
 
           {/* Continue Button */}
-          <button
+          {/* <button
             type="button"
             onClick={handleContinue}
             className="w-full bg-green-700 text-white font-semibold text-lg py-3 rounded-xl"
           >
             Continue
-          </button>
+          </button> */}
+          <FormButton label="Back" onClick={() => router.back()} />
+          <FormButton label="Continue" onClick={handleContinue} />
         </form>
       </div>
     </main>

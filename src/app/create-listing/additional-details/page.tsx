@@ -6,6 +6,7 @@ import {
   listingAdditionalFieldLabels,
   listingConditionOptions,
 } from "@/data/listingOptions";
+import FormButton from "@/components/FormButton";
 
 type FormKeys = keyof typeof listingAdditionalFieldLabels;
 
@@ -97,14 +98,8 @@ export default function AdditionalDetailsPage() {
               );
             }
           )}
-
-          <button
-            type="button"
-            onClick={handleSubmit}
-            className="w-full bg-green-700 text-white font-semibold text-lg py-3 rounded-xl"
-          >
-            Submit
-          </button>
+          <FormButton label="Back" onClick={() => router.back()} />
+          <FormButton label="Submit" onClick={handleSubmit} />
         </form>
       </div>
     </main>
