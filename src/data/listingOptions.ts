@@ -1,8 +1,11 @@
-export const listingFieldLabels = {
+export const basicListingFieldLabels = {
   brand: "Brand",
   appliance_type: "Appliance Type",
   part_type: "Part Type",
   short_description: "Short Description",
+};
+
+export const additionalListingFieldLabels = {
   condition: "Condition",
   price: "Price",
   location: "Location",
