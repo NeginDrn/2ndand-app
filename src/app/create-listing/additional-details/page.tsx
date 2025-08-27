@@ -1,51 +1,55 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  listingAdditionalFieldLabels,
-  listingConditionOptions,
+  additionalListingFieldLabels,
+  listingSelectOptions,
 } from "@/data/listingOptions";
+import FormField from "@/components/FormField";
 import FormButton from "@/components/FormButton";
-
-type FormKeys = keyof typeof listingAdditionalFieldLabels;
+import { getInitialFormState } from "@/utils/getInitialFormState";
+import { validateForm } from "@/utils/validateForm";
 
 export default function AdditionalDetailsPage() {
   const router = useRouter();
 
-  const [form, setForm] = useState<Record<FormKeys, string>>({
-    condition: "",
-    price: "",
-    location: "",
-    description: "",
-  });
+  // Initialise with shared util for consistency with Step 1
+  const [form, setForm] = useState(
+    getInitialFormState(additionalListingFieldLabels)
+  );
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Guard: if Step 1 data is missing, send user back to Step 1
   useEffect(() => {
-    const storedData = localStorage.getItem("basicListingInfo");
-    if (storedData) {
-      try {
-        const parsedData = JSON.parse(storedData);
-        console.log("Retrieved basic info from storage:", parsedData);
-        // Optional: Merge with form state if needed
-      } catch (error) {
-        console.error("Failed to parse listing info from storage:", error);
-      }
-    }
-  }, []);
+    const basic = localStorage.getItem("basicListingInfo");
+    if (!basic) router.replace("/create-listing/basic-info");
+  }, [router]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = () => {
-    console.log("Submitted:", form);
-    // router.push("/create-listing/confirmation"); // Enable when ready
+    // Validate Step 2 fields (all required incl. price format)
+    const validationErrors = validateForm(form, additionalListingFieldLabels);
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) return;
+
+    // Merge Step 1 + Step 2 into a draft and persist locally (MVP)
+    const basic = JSON.parse(localStorage.getItem("basicListingInfo") || "{}");
+    const listingDraft = {
+      ...basic,
+      ...form,
+      createdAt: new Date().toISOString(),
+    };
+
+    localStorage.setItem("listingDraft", JSON.stringify(listingDraft));
+    // router.push("/create-listing/confirmation"); // placeholder route
+    router.push("/");
   };
 
   return (
@@ -61,42 +65,22 @@ export default function AdditionalDetailsPage() {
 
         {/* Form */}
         <form className="space-y-6">
-          {Object.entries(listingAdditionalFieldLabels).map(
-            ([field, label]) => {
-              const isSelect = field === "condition";
-              return (
-                <div key={field}>
-                  <label htmlFor={field} className="block font-bold mb-1">
-                    {label}
-                  </label>
-
-                  {isSelect ? (
-                    <select
-                      name={field}
-                      value={form[field as FormKeys]}
-                      onChange={handleChange}
-                      className="w-full bg-white border-2 border-[#B6D400] rounded-lg px-4 py-3 text-green-800 appearance-none"
-                    >
-                      <option value="">Select condition</option>
-                      {listingConditionOptions.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      name={field}
-                      value={form[field as FormKeys]}
-                      onChange={handleChange}
-                      placeholder={label}
-                      className="w-full bg-white border-2 border-[#B6D400] rounded-lg px-4 py-3 text-green-800"
-                    />
-                  )}
-                </div>
-              );
-            }
+          {Object.entries(additionalListingFieldLabels).map(
+            ([field, label]) => (
+              <FormField
+                key={field}
+                name={field}
+                label={label}
+                value={form[field as keyof typeof form]}
+                onChange={handleChange}
+                error={errors[field]}
+                options={
+                  listingSelectOptions[
+                    field as keyof typeof listingSelectOptions
+                  ]
+                }
+              />
+            )
           )}
           <FormButton label="Back" onClick={() => router.back()} />
           <FormButton label="Submit" onClick={handleSubmit} />
