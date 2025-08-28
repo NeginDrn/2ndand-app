@@ -1,21 +1,32 @@
-// app/create-listing/confirmation/page.tsx
 "use client";
-import { ROUTES } from "@/lib/routes";
-import { FormEvent, useEffect, useState } from "react";
+
+import { useEffect, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
+import { ROUTES } from "@/lib/routes";
 import FormButton from "@/components/FormButton";
 import {
   basicListingFieldLabels,
   additionalListingFieldLabels,
 } from "@/data/listingOptions";
 
-type ListingDraft = Record<string, string>;
+type ListingDraft = {
+  brand: string;
+  applianceType: string;
+  partType: string;
+  shortDescription: string;
+  condition: string;
+  price: string;
+  location: string;
+  description: string;
+};
 
 export default function ConfirmationPage() {
   const router = useRouter();
   const [listing, setListing] = useState<ListingDraft | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  // Merge Step 1 + Step 2 labels for review UI
+  // Labels to display (Step 1 first, then Step 2)
   const reviewFieldLabels: Record<string, string> = {
     ...basicListingFieldLabels,
     ...additionalListingFieldLabels,
@@ -24,41 +35,61 @@ export default function ConfirmationPage() {
   const display = (v: unknown) =>
     typeof v === "string" && v.trim().length > 0 ? v : "—";
 
-  // Load Step 1 + Step 2 from storage and merge here
+  // Load Step 1 + Step 2 from storage, merge here
   useEffect(() => {
-    const basicInfoData = localStorage.getItem("basicListingInfo");
-    const additionalInfoData = localStorage.getItem("additionalListingInfo");
-
-    if (!basicInfoData || !additionalInfoData) {
-      router.replace(ROUTES.createListing.basicInfo); // guard
+    const basicRaw = localStorage.getItem("basicListingInfo");
+    const additionalRaw = localStorage.getItem("additionalListingInfo");
+    if (!basicRaw || !additionalRaw) {
+      router.replace(ROUTES.createListing.basicInfo);
       return;
     }
-
     try {
-      const merged = {
-        ...JSON.parse(basicInfoData),
-        ...JSON.parse(additionalInfoData),
-        createdAt: new Date().toISOString(),
-      };
+      const merged: ListingDraft = {
+        ...(JSON.parse(basicRaw) as Record<string, string>),
+        ...(JSON.parse(additionalRaw) as Record<string, string>),
+      } as ListingDraft;
       setListing(merged);
     } catch {
       router.replace(ROUTES.createListing.basicInfo);
     }
   }, [router]);
 
-  const handleSubmit = () => {
-    if (!listing) return;
+  const toNumber = (v: string) =>
+    Number(v.replace(/[^\d.,]/g, "").replace(",", ".")) || 0;
 
-    // Save final draft
-    localStorage.setItem("listingDraft", JSON.stringify(listing));
-    console.log("Submitted listing:", listing);
+  const toDbPayload = (draft: ListingDraft) => ({
+    brand: draft.brand,
+    appliance_type: draft.applianceType,
+    part_type: draft.partType,
+    short_description: draft.shortDescription,
+    condition: draft.condition,
+    price: toNumber(draft.price),
+    location: draft.location,
+    description: draft.description,
+    // created_at: let DB default handle it
+    // user_id: null for now (until auth)
+  });
 
-    // Clean up temporary step data
+  const handleSubmit = async () => {
+    if (!listing || submitting) return;
+
+    setSubmitting(true);
+    const { error } = await supabase
+      .from("listings")
+      .insert([toDbPayload(listing)]);
+    setSubmitting(false);
+
+    if (error) {
+      console.error("Failed to insert listing:", error);
+      alert(`Sorry, we couldn’t save your listing. ${error.message ?? ""}`);
+      return;
+    }
+
+    // Clean up draft pieces
     localStorage.removeItem("basicListingInfo");
     localStorage.removeItem("additionalListingInfo");
 
-    // Redirect to listings page (MVP placeholder)
-    router.push(ROUTES.home);
+    router.push(ROUTES.listings.index);
   };
 
   if (!listing) return null;
@@ -76,7 +107,7 @@ export default function ConfirmationPage() {
 
         <h2 className="text-xl font-bold mb-6">Review your details</h2>
 
-        {/* Read-only summary */}
+        {/* Read-only summary (rows with light-green borders) */}
         <dl className="border-2 border-[#B6D400] rounded-xl overflow-hidden">
           {Object.entries(reviewFieldLabels).map(([key, label], idx, arr) => (
             <div
@@ -88,25 +119,30 @@ export default function ConfirmationPage() {
             >
               <dt className="font-bold">{label}</dt>
               <dd className="text-green-800 whitespace-pre-wrap">
-                {display(listing[key])}
+                {display(listing[key as keyof ListingDraft])}
               </dd>
             </div>
           ))}
         </dl>
 
-        {/* Actions (stacked buttons) */}
-        <div className="mt-8 flex flex-col gap-4">
-          <form
-            className="space-y-6"
-            onSubmit={(e: FormEvent<HTMLFormElement>) => {
-              e.preventDefault();
-              handleSubmit();
-            }}
-          >
-            <FormButton label="Back" onClick={() => router.back()} />
-            <FormButton label="Submit" onClick={handleSubmit} />
-          </form>
-        </div>
+        {/* Actions: Back (button) + Submit (form submit) */}
+        <form
+          className="mt-8 flex flex-col gap-4"
+          onSubmit={(e: FormEvent<HTMLFormElement>) => {
+            e.preventDefault();
+            handleSubmit();
+          }}
+        >
+          <FormButton
+            label="Back"
+            type="button"
+            onClick={() => router.back()}
+          />
+          <FormButton
+            label={submitting ? "Submitting..." : "Submit"}
+            type="submit"
+          />
+        </form>
       </div>
     </main>
   );

@@ -7,11 +7,11 @@ export const ROUTES = {
   //     login: "/login",
   //   },
 
-  //   listings: {
-  //     index: "/listings",
-  //     details: (id: string) => `/listings/${id}`,
-  //     search: "/search",
-  //   },
+  listings: {
+    index: "/listings",
+    //     details: (id: string) => `/listings/${id}`,
+    //     search: "/search",
+  },
 
   createListing: {
     basicInfo: "/create-listing/basic-info",

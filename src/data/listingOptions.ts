@@ -1,43 +1,45 @@
+// Step 1 — Basic Info
 export const basicListingFieldLabels = {
   brand: "Brand",
-  appliance_type: "Appliance Type",
-  part_type: "Part Type",
-  short_description: "Short Description",
-};
+  applianceType: "Appliance Type",
+  partType: "Part Type",
+  shortDescription: "Short Description",
+} as const;
 
+// Step 2 — Additional Details
 export const additionalListingFieldLabels = {
   condition: "Condition",
   price: "Price",
   location: "Location",
   description: "Description",
-};
+} as const;
 
+// Centralised select options (keys must match field names above)
 export const listingSelectOptions = {
-  brand: ["Bosch", "Samsung", "LG", "Whirlpool", "Electrolux", "Beko"],
-  appliance_type: [
+  applianceType: [
     "Washing Machine",
     "Fridge",
-    "Toaster",
-    "Oven",
-    "Dryer",
     "Dishwasher",
+    "Dryer",
+    "Oven",
+    "Microwave",
+    "Toaster",
   ],
-  part_type: ["Drum", "Door", "Tray", "Motor", "Filter", "Control Panel"],
-  condition: ["New", "Used"],
-};
+  brand: ["Bosch", "Samsung", "LG", "Whirlpool", "Electrolux", "Beko"],
+  partType: [
+    "Motor",
+    "Door",
+    "Drum",
+    "Filter",
+    "Shelf",
+    "Control Panel",
+    "Tray",
+  ],
+  condition: ["New", "Used - Like New", "Used - Good", "Used - Acceptable"],
+} as const;
 
-export const listingAdditionalFieldLabels = {
-  condition: "Condition",
-  price: "Price",
-  location: "Location",
-  description: "Description",
-};
-
-export const listingConditionOptions = [
-  "New",
-  "Used - Like New",
-  "Used - Good",
-  "Used - Acceptable",
-];
-
+// ——— Types ———
+export type BasicListingField = keyof typeof basicListingFieldLabels;
+export type AdditionalListingField = keyof typeof additionalListingFieldLabels;
+export type ListingFieldKey = BasicListingField | AdditionalListingField;
 export type ListingSelectField = keyof typeof listingSelectOptions;
