@@ -37,7 +37,8 @@ export default function FormField({
           aria-describedby={error ? `${name}-error` : undefined}
           className={`w-full bg-white border-2 ${
             error ? "border-red-500" : "border-[#B6D400]"
-          } rounded-lg px-4 py-3 text-green-800 appearance-none`}
+          } rounded-lg px-4 py-3 text-green-800
+focus:outline-none focus:border-[#047857]`}
         >
           <option value="">{`Select ${label.toLowerCase()}`}</option>
           {options?.map((option) => (
@@ -56,7 +57,8 @@ export default function FormField({
           placeholder={label}
           className={`w-full bg-white border-2 ${
             error ? "border-red-500" : "border-[#B6D400]"
-          } rounded-lg px-4 py-3 text-green-800`}
+          } rounded-lg px-4 py-3 text-green-800
+focus:outline-none focus:border-[#047857]`}
           aria-invalid={!!error}
           aria-describedby={error ? `${name}-error` : undefined}
         />
