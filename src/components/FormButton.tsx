@@ -2,13 +2,14 @@
 
 type FormButtonProps = {
   label: string;
-  onClick: () => void;
+  onClick?: () => void;
+  type?: "button" | "submit" | "reset";
 };
 
-export default function FormButton({ label, onClick }: FormButtonProps) {
+export default function FormButton({ label, onClick, type }: FormButtonProps) {
   return (
     <button
-      type="button"
+      type={type}
       onClick={onClick}
       className="w-full bg-green-700 text-white font-semibold text-lg py-3 rounded-xl"
     >

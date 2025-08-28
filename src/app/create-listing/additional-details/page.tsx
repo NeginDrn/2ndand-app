@@ -1,6 +1,7 @@
+// app/create-listing/additional-details/page.tsx
 "use client";
-
-import { useEffect, useState } from "react";
+import { ROUTES } from "@/lib/routes";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   additionalListingFieldLabels,
@@ -22,8 +23,10 @@ export default function AdditionalDetailsPage() {
 
   // Guard: if Step 1 data is missing, send user back to Step 1
   useEffect(() => {
-    const basic = localStorage.getItem("basicListingInfo");
-    if (!basic) router.replace("/create-listing/basic-info");
+    const basicInfoData = !!localStorage.getItem("basicListingInfo");
+    if (!basicInfoData) {
+      router.replace(ROUTES.createListing.basicInfo);
+    }
   }, [router]);
 
   const handleChange = (
@@ -33,23 +36,20 @@ export default function AdditionalDetailsPage() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = () => {
-    // Validate Step 2 fields (all required incl. price format)
+  const handleContinue = () => {
     const validationErrors = validateForm(form, additionalListingFieldLabels);
     setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) return;
 
-    // Merge Step 1 + Step 2 into a draft and persist locally (MVP)
-    const basic = JSON.parse(localStorage.getItem("basicListingInfo") || "{}");
-    const listingDraft = {
-      ...basic,
-      ...form,
-      createdAt: new Date().toISOString(),
-    };
+    if (Object.keys(validationErrors).length > 0) {
+      const firstKey = Object.keys(validationErrors)[0];
+      const el = document.getElementById(firstKey);
+      el?.focus();
+      el?.scrollIntoView?.({ behavior: "smooth", block: "center" }); // optional
+      return;
+    }
 
-    localStorage.setItem("listingDraft", JSON.stringify(listingDraft));
-    // router.push("/create-listing/confirmation"); // placeholder route
-    router.push("/");
+    localStorage.setItem("additionalListingInfo", JSON.stringify(form));
+    router.push(ROUTES.createListing.confirmation);
   };
 
   return (
@@ -64,7 +64,13 @@ export default function AdditionalDetailsPage() {
         </div>
 
         {/* Form */}
-        <form className="space-y-6">
+        <form
+          className="space-y-6"
+          onSubmit={(e: FormEvent<HTMLFormElement>) => {
+            e.preventDefault();
+            handleContinue();
+          }}
+        >
           {Object.entries(additionalListingFieldLabels).map(
             ([field, label]) => (
               <FormField
@@ -83,7 +89,7 @@ export default function AdditionalDetailsPage() {
             )
           )}
           <FormButton label="Back" onClick={() => router.back()} />
-          <FormButton label="Submit" onClick={handleSubmit} />
+          <FormButton label="Continue" type="submit" />
         </form>
       </div>
     </main>

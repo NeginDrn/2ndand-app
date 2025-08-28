@@ -63,7 +63,12 @@ export default function FormField({
       )}
 
       {error && (
-        <p id={`${name}-error`} className="text-red-600 text-sm mt-1">
+        <p
+          id={`${name}-error`}
+          className="text-red-600 text-sm mt-1"
+          role="alert"
+          aria-live="polite"
+        >
           {error}
         </p>
       )}

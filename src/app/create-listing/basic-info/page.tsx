@@ -1,6 +1,7 @@
 "use client";
+import { ROUTES } from "@/lib/routes";
 
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   basicListingFieldLabels,
@@ -26,15 +27,20 @@ export default function CreateListingPage() {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
-
   const handleContinue = () => {
     const validationErrors = validateForm(form, basicListingFieldLabels);
     setErrors(validationErrors);
 
-    if (Object.keys(validationErrors).length > 0) return;
+    if (Object.keys(validationErrors).length > 0) {
+      const firstKey = Object.keys(validationErrors)[0];
+      const el = document.getElementById(firstKey);
+      el?.focus(); // move focus
+      el?.scrollIntoView?.({ behavior: "smooth", block: "center" }); // optional
+      return;
+    }
 
     localStorage.setItem("basicListingInfo", JSON.stringify(form));
-    router.push("/create-listing/additional-details");
+    router.push(ROUTES.createListing.additionalDetails);
   };
 
   return (
@@ -49,7 +55,13 @@ export default function CreateListingPage() {
         </div>
 
         {/* Form */}
-        <form className="space-y-6">
+        <form
+          className="space-y-6"
+          onSubmit={(e: FormEvent<HTMLFormElement>) => {
+            e.preventDefault();
+            handleContinue();
+          }}
+        >
           {Object.entries(basicListingFieldLabels).map(([field, label]) => (
             <FormField
               key={field}
@@ -65,7 +77,7 @@ export default function CreateListingPage() {
           ))}
 
           <FormButton label="Back" onClick={() => router.back()} />
-          <FormButton label="Continue" onClick={handleContinue} />
+          <FormButton label="Continue" />
         </form>
       </div>
     </main>
