@@ -73,10 +73,30 @@ export default function ConfirmationPage() {
   const handleSubmit = async () => {
     if (!listing || submitting) return;
 
+    // 1) get current user
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    // 2) if not logged in, send to login (carry return path)
+    if (!user) {
+      router.push(
+        `${ROUTES.auth.login}?next=${encodeURIComponent(
+          ROUTES.createListing.confirmation
+        )}`
+      );
+      return;
+    }
+
     setSubmitting(true);
-    const { error } = await supabase
-      .from("listings")
-      .insert([toDbPayload(listing)]);
+
+    // 3) include user_id in payload
+    const payload = {
+      ...toDbPayload(listing),
+      user_id: user.id,
+    };
+
+    const { error } = await supabase.from("listings").insert([payload]);
     setSubmitting(false);
 
     if (error) {
@@ -85,11 +105,9 @@ export default function ConfirmationPage() {
       return;
     }
 
-    // Clean up draft pieces
     localStorage.removeItem("basicListingInfo");
     localStorage.removeItem("additionalListingInfo");
-
-    router.push(ROUTES.listings.index);
+    router.push(ROUTES.home); // (as we decided earlier)
   };
 
   if (!listing) return null;

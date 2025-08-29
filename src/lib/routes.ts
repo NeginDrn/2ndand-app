@@ -2,10 +2,10 @@
 export const ROUTES = {
   home: "/",
 
-  //   auth: {
-  //     register: "/register",
-  //     login: "/login",
-  //   },
+  auth: {
+    register: "/register",
+    login: "/login",
+  },
 
   listings: {
     index: "/listings",
