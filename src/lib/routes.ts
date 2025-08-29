@@ -5,6 +5,7 @@ export const ROUTES = {
   auth: {
     register: "/register",
     login: "/login",
+    resetPassword: "/reset-password",
   },
 
   listings: {
