@@ -1,8 +1,15 @@
-import ButtonLink from "../components/ButtonLinks";
+// app/page.tsx
+"use client";
 
 import Link from "next/link";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/lib/supabaseClient";
+import { ROUTES } from "@/lib/routes";
+import ButtonLink from "@/components/ButtonLinks";
 
 export default function HomePage() {
+  const { user, loading } = useAuth();
+
   return (
     <main className="min-h-screen bg-[#FFFEF2] text-green-800 flex flex-col items-center px-6 py-10">
       {/* Header */}
@@ -13,9 +20,38 @@ export default function HomePage() {
           <span className="text-2xl font-semibold tracking-tight">2ndand</span>
         </div>
 
-        <Link href="/register" className="text-lg font-medium">
-          Register
-        </Link>
+        <div className="flex space-x-6">
+          {!loading && !user && (
+            <>
+              <Link href={ROUTES.auth.login} className="text-lg font-medium">
+                Login
+              </Link>
+              <Link href={ROUTES.auth.register} className="text-lg font-medium">
+                Register
+              </Link>
+            </>
+          )}
+
+          {!loading && user && (
+            <>
+              <Link
+                href={ROUTES.account.myListings}
+                className="text-lg font-medium"
+              >
+                My Listings
+              </Link>
+              <button
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  window.location.href = ROUTES.home;
+                }}
+                className="text-lg font-medium"
+              >
+                Logout
+              </button>
+            </>
+          )}
+        </div>
       </header>
 
       {/* Hero */}
@@ -30,8 +66,8 @@ export default function HomePage() {
         </h1>
 
         <div className="flex flex-col sm:flex-row gap-6">
-          <ButtonLink href="/search">Search for a part</ButtonLink>
-          <ButtonLink href="/create-listing/basic-info">
+          <ButtonLink href={ROUTES.search}>Search for a part</ButtonLink>
+          <ButtonLink href={ROUTES.createListing.basicInfo}>
             List a part for sale
           </ButtonLink>
         </div>
