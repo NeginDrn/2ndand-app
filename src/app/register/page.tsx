@@ -19,6 +19,7 @@ import {
   sanitiseEmail,
   isPasswordStrongEnough,
   passwordRules,
+  isValidEmail,
 } from "@/lib/utils/authInput";
 
 export default function RegisterPage() {
@@ -32,6 +33,7 @@ export default function RegisterPage() {
   // If already logged in, bounce to `next`
   useRedirectIfAuthenticated(next);
 
+  // Local state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -48,31 +50,42 @@ export default function RegisterPage() {
 
     const cleanedEmail = sanitiseEmail(email);
 
-    // Client validation
+    // 1) Required
     if (!cleanedEmail) {
-      showError(setError, ValidationMessages.emailRequired, emailRef.current);
+      showError(ValidationMessages.emailRequired, emailRef.current, setError);
       return;
     }
+
+    // 2) Stricter format check (must include dot + 2+ chars after)
+    if (!isValidEmail(cleanedEmail)) {
+      showError(ValidationMessages.emailInvalid, emailRef.current, setError);
+      return;
+    }
+
+    // 3) Password length
     if (!isPasswordStrongEnough(password)) {
       showError(
-        setError,
         ValidationMessages.passwordMinLength.replace(
           "8",
           String(passwordRules.minLength)
         ),
-        passwordRef.current
-      );
-      return;
-    }
-    if (password !== confirmPassword) {
-      showError(
-        setError,
-        ValidationMessages.passwordsDoNotMatch,
-        confirmRef.current
+        passwordRef.current,
+        setError
       );
       return;
     }
 
+    // 4) Passwords match
+    if (password !== confirmPassword) {
+      showError(
+        ValidationMessages.passwordsDoNotMatch,
+        confirmRef.current,
+        setError
+      );
+      return;
+    }
+
+    // 5) Submit to Supabase
     setSubmitting(true);
     const { error } = await supabase.auth.signUp({
       email: cleanedEmail,
@@ -81,7 +94,7 @@ export default function RegisterPage() {
     setSubmitting(false);
 
     if (error) {
-      showError(setError, getAuthErrorMessage(error.message));
+      showError(getAuthErrorMessage(error.message), undefined, setError);
       return;
     }
 

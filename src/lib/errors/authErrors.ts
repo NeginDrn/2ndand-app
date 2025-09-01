@@ -7,6 +7,7 @@ export const AuthErrorMessages = {
 
 export const ValidationMessages = {
   emailRequired: "Please enter your email address.",
+  emailInvalid: "Please enter a valid email address.",
   passwordMinLength: "Your password must be at least 8 characters long.",
   passwordsDoNotMatch: "Passwords do not match.",
 } as const;
