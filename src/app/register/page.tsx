@@ -1,3 +1,4 @@
+// app/register/page.tsx
 "use client";
 
 import { useState, useRef, FormEvent } from "react";
@@ -38,8 +39,18 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Server-level/global error (e.g., Supabase)
   const [error, setError] = useState<string | null>(null);
 
+  // Field-level errors (show multiple at once)
+  const [fieldErrors, setFieldErrors] = useState<{
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+  }>({});
+
+  // Refs for focus management
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const confirmRef = useRef<HTMLInputElement>(null);
@@ -47,41 +58,37 @@ export default function RegisterPage() {
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
 
     const cleanedEmail = sanitiseEmail(email);
+    const errs: typeof fieldErrors = {};
 
-    // 1) Required
+    // Email validations
     if (!cleanedEmail) {
-      showError(ValidationMessages.emailRequired, emailRef.current, setError);
-      return;
+      errs.email = ValidationMessages.emailRequired;
+    } else if (!isValidEmail(cleanedEmail)) {
+      errs.email = ValidationMessages.emailInvalid;
     }
 
-    // 2) Stricter format check (must include dot + 2+ chars after)
-    if (!isValidEmail(cleanedEmail)) {
-      showError(ValidationMessages.emailInvalid, emailRef.current, setError);
-      return;
-    }
-
-    // 3) Password length
+    // Password validations
     if (!isPasswordStrongEnough(password)) {
-      showError(
-        ValidationMessages.passwordMinLength.replace(
-          "8",
-          String(passwordRules.minLength)
-        ),
-        passwordRef.current,
-        setError
+      errs.password = ValidationMessages.passwordMinLength.replace(
+        "8",
+        String(passwordRules.minLength)
       );
-      return;
     }
 
-    // 4) Passwords match
+    // Confirm match
     if (password !== confirmPassword) {
-      showError(
-        ValidationMessages.passwordsDoNotMatch,
-        confirmRef.current,
-        setError
-      );
+      errs.confirmPassword = ValidationMessages.passwordsDoNotMatch;
+    }
+
+    // If any client-side errors → show them and focus first invalid
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      if (errs.email) emailRef.current?.focus();
+      else if (errs.password) passwordRef.current?.focus();
+      else if (errs.confirmPassword) confirmRef.current?.focus();
       return;
     }
 
@@ -101,6 +108,7 @@ export default function RegisterPage() {
     router.replace(next);
   };
 
+  // Global error id for a11y (polite live region)
   const errorId = makeErrorId("register");
 
   return (
@@ -119,6 +127,7 @@ export default function RegisterPage() {
         <h1 className="text-3xl font-semibold mb-6">Create your account</h1>
 
         <form onSubmit={onSubmit} className="space-y-6" noValidate>
+          {/* Email */}
           <div>
             <label htmlFor="email" className="block font-bold mb-1">
               Email
@@ -134,11 +143,18 @@ export default function RegisterPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-white border-2 border-[#B6D400] focus:border-green-700 focus:ring-0 rounded-lg px-4 py-3 text-green-800"
-              aria-describedby={error ? errorId : undefined}
+              aria-invalid={!!fieldErrors.email}
+              aria-describedby={fieldErrors.email ? "email-error" : undefined}
               required
             />
+            {fieldErrors.email && (
+              <p id="email-error" className="text-red-700 mt-1" role="alert">
+                {fieldErrors.email}
+              </p>
+            )}
           </div>
 
+          {/* Password */}
           <div>
             <label htmlFor="password" className="block font-bold mb-1">
               Password
@@ -153,12 +169,21 @@ export default function RegisterPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-white border-2 border-[#B6D400] focus:border-green-700 focus:ring-0 rounded-lg px-4 py-3 text-green-800"
-              aria-describedby={error ? errorId : undefined}
+              aria-invalid={!!fieldErrors.password}
+              aria-describedby={
+                fieldErrors.password ? "password-error" : undefined
+              }
               required
               minLength={passwordRules.minLength}
             />
+            {fieldErrors.password && (
+              <p id="password-error" className="text-red-700 mt-1" role="alert">
+                {fieldErrors.password}
+              </p>
+            )}
           </div>
 
+          {/* Confirm Password */}
           <div>
             <label htmlFor="confirmPassword" className="block font-bold mb-1">
               Confirm Password
@@ -173,12 +198,21 @@ export default function RegisterPage() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full bg-white border-2 border-[#B6D400] focus:border-green-700 focus:ring-0 rounded-lg px-4 py-3 text-green-800"
-              aria-describedby={error ? errorId : undefined}
+              aria-invalid={!!fieldErrors.confirmPassword}
+              aria-describedby={
+                fieldErrors.confirmPassword ? "confirm-error" : undefined
+              }
               required
               minLength={passwordRules.minLength}
             />
+            {fieldErrors.confirmPassword && (
+              <p id="confirm-error" className="text-red-700 mt-1" role="alert">
+                {fieldErrors.confirmPassword}
+              </p>
+            )}
           </div>
 
+          {/* Global/server error (polite live region) */}
           {error && (
             <p
               id={errorId}
