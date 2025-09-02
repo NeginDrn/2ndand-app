@@ -42,6 +42,7 @@ export default function RegisterPage() {
 
   // Server-level/global error (e.g., Supabase)
   const [error, setError] = useState<string | null>(null);
+  const errorRef = useRef<HTMLParagraphElement>(null);
 
   // Field-level errors (show multiple at once)
   const [fieldErrors, setFieldErrors] = useState<{
@@ -60,13 +61,13 @@ export default function RegisterPage() {
     setError(null);
     setFieldErrors({});
 
-    const cleanedEmail = sanitiseEmail(email);
+    const sanitisedEmail = sanitiseEmail(email);
     const errs: typeof fieldErrors = {};
 
     // Email validations
-    if (!cleanedEmail) {
+    if (!sanitisedEmail) {
       errs.email = ValidationMessages.emailRequired;
-    } else if (!isValidEmail(cleanedEmail)) {
+    } else if (!isValidEmail(sanitisedEmail)) {
       errs.email = ValidationMessages.emailInvalid;
     }
 
@@ -95,13 +96,17 @@ export default function RegisterPage() {
     // 5) Submit to Supabase
     setSubmitting(true);
     const { error } = await supabase.auth.signUp({
-      email: cleanedEmail,
+      email: sanitisedEmail,
       password,
     });
     setSubmitting(false);
 
     if (error) {
-      showError(getAuthErrorMessage(error.message), undefined, setError);
+      // Centralised mapping + focus the global error after paint
+      showError(getAuthErrorMessage(error.message), undefined, (msg) => {
+        setError(msg);
+        setTimeout(() => errorRef.current?.focus(), 0);
+      });
       return;
     }
 
@@ -212,13 +217,14 @@ export default function RegisterPage() {
             )}
           </div>
 
-          {/* Global/server error (polite live region) */}
+          {/* Global/server error (assertive + focusable) */}
           {error && (
             <p
               id={errorId}
+              ref={errorRef}
               className="text-red-700"
               role="alert"
-              aria-live="polite"
+              tabIndex={-1}
             >
               {error}
             </p>
