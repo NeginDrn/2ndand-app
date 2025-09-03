@@ -12,14 +12,20 @@ import FormField from "@/components/FormField";
 
 import { validateForm } from "@/utils/validateForm";
 import { getInitialFormState } from "@/utils/getInitialFormState";
+import { useAuthGuard } from "@/hooks/useAuthGuard"; // ✅ new
 
 export default function CreateListingPage() {
   const router = useRouter();
+
+  // 🔐 Ensure only authenticated users can access this page
+  const { loading } = useAuthGuard(ROUTES.createListing.basicInfo);
+  // While checking auth, render nothing (prevents flicker)
 
   const [form, setForm] = useState(
     getInitialFormState(basicListingFieldLabels)
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
+  if (loading) return null;
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -76,7 +82,7 @@ export default function CreateListingPage() {
             />
           ))}
 
-          <FormButton label="Back" onClick={() => router.back()} />
+          <FormButton label="Back" onClick={() => router.push(ROUTES.home)} />
           <FormButton label="Continue" type="submit" />
         </form>
       </div>

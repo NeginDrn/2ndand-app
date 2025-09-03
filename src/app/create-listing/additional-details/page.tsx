@@ -7,15 +7,19 @@ import {
   additionalListingFieldLabels,
   listingSelectOptions,
 } from "@/data/listingOptions";
-import FormField from "@/components/FormField";
 import FormButton from "@/components/FormButton";
+import FormField from "@/components/FormField";
 import { getInitialFormState } from "@/utils/getInitialFormState";
 import { validateForm } from "@/utils/validateForm";
+import { useAuthGuard } from "@/hooks/useAuthGuard"; // auth gate
 
 export default function AdditionalDetailsPage() {
   const router = useRouter();
 
-  // Initialise with shared util for consistency with Step 1
+  // 🔐 Require login before showing the form
+  const { loading } = useAuthGuard(ROUTES.createListing.additionalDetails);
+
+  // While checking auth, render nothing (prevents flicker)
   const [form, setForm] = useState(
     getInitialFormState(additionalListingFieldLabels)
   );
@@ -23,11 +27,16 @@ export default function AdditionalDetailsPage() {
 
   // Guard: if Step 1 data is missing, send user back to Step 1
   useEffect(() => {
-    const basicInfoData = !!localStorage.getItem("basicListingInfo");
-    if (!basicInfoData) {
-      router.replace(ROUTES.createListing.basicInfo);
+    if (!loading) {
+      const basicInfoExists = !!localStorage.getItem("basicListingInfo");
+      if (!basicInfoExists) {
+        router.replace(ROUTES.createListing.basicInfo);
+      }
     }
-  }, [router]);
+  }, [loading, router]);
+
+  // While checking auth, render nothing to avoid flicker
+  if (loading) return null;
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -88,7 +97,11 @@ export default function AdditionalDetailsPage() {
               />
             )
           )}
-          <FormButton label="Back" onClick={() => router.back()} />
+          <FormButton
+            label="Back"
+            type="button"
+            onClick={() => router.push(ROUTES.home)}
+          />
           <FormButton label="Continue" type="submit" />
         </form>
       </div>

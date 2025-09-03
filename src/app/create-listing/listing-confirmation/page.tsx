@@ -9,6 +9,7 @@ import {
   basicListingFieldLabels,
   additionalListingFieldLabels,
 } from "@/data/listingOptions";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 type ListingDraft = {
   brand: string;
@@ -23,6 +24,9 @@ type ListingDraft = {
 
 export default function ConfirmationPage() {
   const router = useRouter();
+  // 🔐 Require login before showing confirmation
+  const { loading } = useAuthGuard(ROUTES.createListing.confirmation);
+
   const [listing, setListing] = useState<ListingDraft | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -37,22 +41,24 @@ export default function ConfirmationPage() {
 
   // Load Step 1 + Step 2 from storage, merge here
   useEffect(() => {
-    const basicRaw = localStorage.getItem("basicListingInfo");
-    const additionalRaw = localStorage.getItem("additionalListingInfo");
-    if (!basicRaw || !additionalRaw) {
-      router.replace(ROUTES.createListing.basicInfo);
-      return;
+    if (!loading) {
+      const basicRaw = localStorage.getItem("basicListingInfo");
+      const additionalRaw = localStorage.getItem("additionalListingInfo");
+      if (!basicRaw || !additionalRaw) {
+        router.replace(ROUTES.createListing.basicInfo);
+        return;
+      }
+      try {
+        const merged: ListingDraft = {
+          ...(JSON.parse(basicRaw) as Record<string, string>),
+          ...(JSON.parse(additionalRaw) as Record<string, string>),
+        } as ListingDraft;
+        setListing(merged);
+      } catch {
+        router.replace(ROUTES.createListing.basicInfo);
+      }
     }
-    try {
-      const merged: ListingDraft = {
-        ...(JSON.parse(basicRaw) as Record<string, string>),
-        ...(JSON.parse(additionalRaw) as Record<string, string>),
-      } as ListingDraft;
-      setListing(merged);
-    } catch {
-      router.replace(ROUTES.createListing.basicInfo);
-    }
-  }, [router]);
+  }, [loading, router]);
 
   const toNumber = (v: string) =>
     Number(v.replace(/[^\d.,]/g, "").replace(",", ".")) || 0;
@@ -107,9 +113,11 @@ export default function ConfirmationPage() {
 
     localStorage.removeItem("basicListingInfo");
     localStorage.removeItem("additionalListingInfo");
-    router.push(ROUTES.home); // (as we decided earlier)
+    router.push(ROUTES.home);
   };
 
+  // While checking auth, render nothing
+  if (loading) return null;
   if (!listing) return null;
 
   return (
@@ -125,7 +133,7 @@ export default function ConfirmationPage() {
 
         <h2 className="text-xl font-bold mb-6">Review your details</h2>
 
-        {/* Read-only summary (rows with light-green borders) */}
+        {/* Read-only summary */}
         <dl className="border-2 border-[#B6D400] rounded-xl overflow-hidden">
           {Object.entries(reviewFieldLabels).map(([key, label], idx, arr) => (
             <div
