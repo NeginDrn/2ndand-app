@@ -77,7 +77,7 @@ export default function CreateListingPage() {
           ))}
 
           <FormButton label="Back" onClick={() => router.back()} />
-          <FormButton label="Continue" />
+          <FormButton label="Continue" type="submit" />
         </form>
       </div>
     </main>

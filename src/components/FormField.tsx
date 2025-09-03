@@ -8,7 +8,7 @@ type FormFieldProps = {
   value: string;
   onChange: (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   error?: string;
-  options?: string[];
+  options?: ReadonlyArray<string>;
 };
 
 export default function FormField({
