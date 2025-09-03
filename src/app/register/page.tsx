@@ -229,7 +229,11 @@ export default function RegisterPage() {
               {error}
             </p>
           )}
-
+          <FormButton
+            label="Back"
+            type="button"
+            onClick={() => router.push(ROUTES.home)}
+          />
           <FormButton
             type="submit"
             label={submitting ? "Creating account..." : "Create account"}

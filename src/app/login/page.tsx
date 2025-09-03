@@ -192,6 +192,11 @@ export default function LoginPage() {
             </p>
           )}
           <FormButton
+            label="Back"
+            type="button"
+            onClick={() => router.push(ROUTES.home)}
+          />
+          <FormButton
             type="submit"
             label={submitting ? "Signing in..." : "Sign In"}
             disabled={submitting}
